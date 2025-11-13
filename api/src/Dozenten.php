@@ -4,12 +4,6 @@ require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 require_once __DIR__ . '/Validation.php';
 
-/**
- * Validiert die Eingabedaten für Dozenten und gibt ein sauberes, bereinigtes Array zurück.
- * @param object|null $data
- * @return array
- * @throws Exception
- */
 function validateAndPrepareDozentData(?object $data): array
 {
     if (!$data) {
@@ -23,7 +17,6 @@ function validateAndPrepareDozentData(?object $data): array
         }
     }
 
-    // Typ- und Format-Validierung
     if (!filter_var($data->fk_id_land, FILTER_VALIDATE_INT) || $data->fk_id_land <= 0) {
         throw new Exception("Ungültige 'fk_id_land'. Muss eine positive Zahl sein.", 400);
     }
@@ -37,7 +30,6 @@ function validateAndPrepareDozentData(?object $data): array
         throw new Exception("Ungültiges Geburtsdatum. Erwartetes Format: YYYY-MM-DD.", 400);
     }
 
-    // Daten bereinigen (Sanitize) und Felder zusammenstellen
     $fields = [
         'vorname'       => htmlspecialchars(strip_tags(trim($data->vorname))),
         'nachname'      => htmlspecialchars(strip_tags(trim($data->nachname))),
@@ -53,8 +45,6 @@ function validateAndPrepareDozentData(?object $data): array
 
     return array_filter($fields, fn($value) => !is_null($value));
 }
-
-// --- HAUPT-DISPATCHER (LOKAL) ---
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");

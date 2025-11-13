@@ -93,7 +93,6 @@ class APICore
         $params[] = $id;
 
         try {
-            // Check if ID exists before updating
             if (!$this->checkIfIdExists($id)) {
                 self::sendErrorResponse(404, "Kein Eintrag mit der ID {$id} gefunden. Update nicht möglich.");
             }
@@ -137,17 +136,12 @@ class APICore
         }
     }
 
-    // --- UTILITY ---
-
     private function checkIfIdExists(int $id): bool
     {
         $stmt = $this->pdo->prepare("SELECT 1 FROM {$this->tableName} WHERE {$this->idField} = ?");
         $stmt->execute([$id]);
         return $stmt->fetchColumn() !== false;
     }
-
-
-    // --- DISPATCHER ENTRY POINT ---
 
     public static function handleRequest(string $tableName, string $idField, callable $validationCallback, ?string $orderBy = null): void
     {

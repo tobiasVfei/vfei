@@ -4,13 +4,6 @@ require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 require_once __DIR__ . '/Validation.php';
 
-
-/**
- * Validiert die Eingabedaten für Kurse und gibt ein sauberes, bereinigtes Array zurück.
- * @param object|null $data
- * @return array
- * @throws Exception
- */
 function validateAndPrepareKursData(?object $data): array
 {
     if (!$data) {
@@ -24,7 +17,6 @@ function validateAndPrepareKursData(?object $data): array
         }
     }
 
-    // Typ- und Format-Validierung
     if (!filter_var($data->fk_id_dozent, FILTER_VALIDATE_INT) || $data->fk_id_dozent <= 0) {
         throw new Exception("Ungültige 'fk_id_dozent'. Muss eine positive Zahl sein.", 400);
     }
@@ -33,7 +25,6 @@ function validateAndPrepareKursData(?object $data): array
         throw new Exception("Ungültiges 'startdatum' oder 'enddatum'. Erwartetes Format: YYYY-MM-DD.", 400);
     }
 
-    // Daten bereinigen (Sanitize) und Felder zusammenstellen
     $fields = [
         'kursnummer'    => htmlspecialchars(strip_tags(trim($data->kursnummer))),
         'kursthema'     => htmlspecialchars(strip_tags(trim($data->kursthema))),
@@ -46,8 +37,6 @@ function validateAndPrepareKursData(?object $data): array
 
     return $fields;
 }
-
-// --- HAUPT-DISPATCHER (LOKAL) ---
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
@@ -71,7 +60,7 @@ try {
             if ($id !== false && $id > 0) {
                 $core->readById($id);
             } else {
-                $core->readAll('startdatum DESC'); // Standardsortierung wie im alten Code
+                $core->readAll('startdatum DESC');
             }
             break;
 

@@ -3,6 +3,16 @@
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
@@ -47,11 +57,9 @@ try {
     }
 
 } catch (PDOException $e) {
-    // Fehler bei Datenbankverbindung (PDOException)
     http_response_code(500);
     echo json_encode(['message' => "Datenbankfehler: " . $e->getMessage()]);
 } catch (Exception $e) {
-    // Fehler bei Validierung (geworfene Exception) oder API-Core-Fehler
     $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
     http_response_code($statusCode);
     echo json_encode(['message' => $e->getMessage()]);
@@ -63,15 +71,13 @@ function validateAndPrepareCountryData(?object $data): array
         throw new Exception("Ungültige Eingabedaten.", 400);
     }
 
-    // Pflichtfeld prüfen (country)
     if (!isset($data->country) || empty(trim($data->country))) {
          throw new Exception("Das Feld 'country' ist erforderlich und darf nicht leer sein.", 400);
     }
 
-    // Daten bereinigen (Sanitize) und Felder zusammenstellen
     $fields = [
         'country' => htmlspecialchars(strip_tags(trim($data->country))),
     ];
 
-    return $fields; // Keine optionalen Felder in tbl_countries
+    return $fields;
 }

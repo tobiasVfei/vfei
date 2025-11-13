@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/APICore.php';
-require_once __DIR__ . '/LernendeValidation.php';
+require_once __DIR__ . '/LernenderValidator.php'; // NEU: Korrekte Einbindung der spezifischen Validierungsklasse
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
@@ -32,7 +32,7 @@ try {
 
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
-            // KORREKTUR 1: Richtige Syntax für den statischen Aufruf
+            // Korrekter statischer Aufruf der Validierungsklasse
             $fields = LernenderValidator::validateAndPrepare($data);
             $core->create($fields);
             break;
@@ -42,7 +42,7 @@ try {
                 throw new Exception("Ungültige ID für Update angegeben.", 400);
             }
             $data = json_decode(file_get_contents("php://input"));
-            // KORREKTUR 2: Richtige Syntax für den statischen Aufruf
+            // Korrekter statischer Aufruf der Validierungsklasse
             $fields = LernenderValidator::validateAndPrepare($data);
             $core->update($id, $fields);
             break;

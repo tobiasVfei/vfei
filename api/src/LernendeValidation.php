@@ -1,16 +1,9 @@
 <?php
 
-// Stellt sicher, dass wir auf die zentrale Validation::validateDate zugreifen können
 require_once __DIR__ . '/Validation.php';
 
 class LernenderValidator
 {
-    /**
-     * Führt alle spezifischen Prüfungen für die Lernenden-Ressource durch.
-     * @param object|null $data
-     * @return array
-     * @throws Exception
-     */
     public static function validateAndPrepare(?object $data): array
     {
         if (!$data) {
@@ -24,7 +17,6 @@ class LernenderValidator
             }
         }
 
-        // Typ- und Format-Validierung (Achtung: nutzt Validation::validateDate!)
         if (!filter_var($data->fk_id_land, FILTER_VALIDATE_INT) || $data->fk_id_land <= 0) {
             throw new Exception("Ungültige 'fk_id_land'. Muss eine positive Zahl sein.", 400);
         }
