@@ -2,12 +2,7 @@
 
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
-
-function validateDate(string $date, string $format = 'Y-m-d'): bool
-{
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
-}
+require_once __DIR__ . '/Validation.php';
 
 /**
  * Validiert die Eingabedaten für Dozenten und gibt ein sauberes, bereinigtes Array zurück.
@@ -38,7 +33,7 @@ function validateAndPrepareDozentData(?object $data): array
     }
 
     $birthdate = isset($data->birthdate) ? trim($data->birthdate) : null;
-    if ($birthdate && !validateDate($birthdate)) {
+    if ($birthdate && !Validation::validateDate($birthdate)) {
         throw new Exception("Ungültiges Geburtsdatum. Erwartetes Format: YYYY-MM-DD.", 400);
     }
 

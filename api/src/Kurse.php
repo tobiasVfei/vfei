@@ -2,14 +2,8 @@
 
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
+require_once __DIR__ . '/Validation.php';
 
-// --- HILFSFUNKTIONEN (SPEZIFISCHE VALIDIERUNG) ---
-
-function validateDate(string $date, string $format = 'Y-m-d'): bool
-{
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
-}
 
 /**
  * Validiert die Eingabedaten für Kurse und gibt ein sauberes, bereinigtes Array zurück.
@@ -35,7 +29,7 @@ function validateAndPrepareKursData(?object $data): array
         throw new Exception("Ungültige 'fk_id_dozent'. Muss eine positive Zahl sein.", 400);
     }
 
-    if (!validateDate(trim($data->startdatum)) || !validateDate(trim($data->enddatum))) {
+    if (!Validation::validateDate(trim($data->startdatum)) || !Validation::validateDate(trim($data->enddatum))) {
         throw new Exception("Ungültiges 'startdatum' oder 'enddatum'. Erwartetes Format: YYYY-MM-DD.", 400);
     }
 

@@ -2,12 +2,8 @@
 
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
+require_once __DIR__ . '/Validation.php';
 
-function validateDate(string $date, string $format = 'Y-m-d'): bool
-{
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
-}
 
 function validateAndPrepareBeziehungData(?object $data): array
 {
@@ -27,7 +23,7 @@ function validateAndPrepareBeziehungData(?object $data): array
         throw new Exception("Ungültige 'fk_id_lehrbetrieb' oder 'fk_id_lernende'. Muss eine positive Zahl sein.", 400);
     }
 
-    if (!validateDate(trim($data->start)) || !validateDate(trim($data->ende))) {
+    if (!Validation::validateDate(trim($data->start)) || !Validation::validateDate(trim($data->ende))) {
         throw new Exception("Ungültiges 'start' oder 'ende' Datum. Erwartetes Format: YYYY-MM-DD.", 400);
     }
 
