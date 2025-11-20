@@ -43,14 +43,23 @@ try {
 
         default:
             throw new Exception("Methode nicht erlaubt.", 405);
-            break;
     }
 
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json;
-    }
+}
 
+/**
+ * Validates and prepares the data for an apprenticeship company (Lehrbetrieb) entry.
+ *
+ * Checks for required fields (company name, address, foreign key ID) and ensures the foreign key is a positive integer.
+ * Sanitizes all string fields.
+ *
+ * @param object|null $data The raw input data from json_decode.
+ * @return array<string, mixed> A sanitized, associative array ready for database insertion.
+ * @throws \Exception On invalid or missing data (HTTP 400).
+ * * @todo CRITICAL: Move this function to a dedicated validation class/file to prevent global namespace pollution.
+ */
 function validateAndPrepareLehrbetriebData(?object $data): array
 {
     if (!$data) {
@@ -60,7 +69,7 @@ function validateAndPrepareLehrbetriebData(?object $data): array
     $required = ['firma', 'strasse', 'plz', 'ort', 'land_id'];
     foreach ($required as $f) {
         if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)))) {
-             throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
+            throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
         }
     }
 

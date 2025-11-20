@@ -1,11 +1,34 @@
 <?php
 
+/**
+ * Core class for REST API processing.
+ * Provides generic CRUD (Create, Read, Update, Delete) operations for a single database table.
+ * Manages HTTP headers and standard error responses.
+ */
 class APICore
 {
+    /**
+     * @var PDO The PDO connection object to the database.
+     */
     private PDO $pdo;
+    /**
+     * @var string The name of the database table (e.g., 'tbl_dozenten').
+     */
     private string $tableName;
+    /**
+     * @var string The name of the primary key field (e.g., 'id_dozent').
+     */
     private string $idField;
 
+    /**
+     * Constructor for initializing the APICore.
+     * Sets the PDO connection, table name, and primary key field.
+     *
+     * @param PDO $pdo The active PDO connection.
+     * @param string $tableName The target table name.
+     * @param string $idField The name of the primary key field.
+     * * @todo CRITICAL: Remove the call to `self::setupHeaders()` from the constructor. Headers should be set globally once at the script entry point.
+     */
     public function __construct(PDO $pdo, string $tableName, string $idField)
     {
         $this->pdo = $pdo;
@@ -14,6 +37,12 @@ class APICore
         self::setupHeaders();
     }
 
+    /**
+     * Sets up necessary HTTP headers for API communication (CORS, Content-Type).
+     * Handles the preflight OPTIONS request by sending a 204 response and exiting.
+     *
+     * @return void
+     */
     public static function setupHeaders(): void
     {
         header("Content-Type: application/json; charset=UTF-8");
@@ -27,6 +56,13 @@ class APICore
         }
     }
 
+    /**
+     * Sends a standardized JSON error response and terminates script execution.
+     *
+     * @param int $statusCode The HTTP status code (e.g., 400, 404, 500).
+     * @param string $message The error message to be displayed.
+     * @return void
+     */
     private static function sendErrorResponse(int $statusCode, string $message): void
     {
         http_response_code($statusCode);
@@ -34,6 +70,12 @@ class APICore
         exit;
     }
 
+    /**
+     * Retrieves all records from the target table.
+     *
+     * @param string|null $orderBy Optional SQL clause to order the results (e.g., 'nachname, vorname').
+     * @return void Sends JSON output and HTTP 200 code.
+     */
     public function readAll(?string $orderBy = null): void
     {
         try {
@@ -49,6 +91,12 @@ class APICore
         }
     }
 
+    /**
+     * Retrieves a single record by its primary key ID.
+     *
+     * @param int $id The ID of the record to retrieve.
+     * @return void Sends JSON output and HTTP 200 or 404 code.
+     */
     public function readById(int $id): void
     {
         try {
@@ -67,6 +115,12 @@ class APICore
         }
     }
 
+    /**
+     * Creates a new record in the database using prepared statement.
+     *
+     * @param array<string, mixed> $fields An associative array of field names and values for the new record.
+     * @return void Sends JSON output and HTTP 201 code with the new ID.
+     */
     public function create(array $fields): void
     {
         $fieldNames = implode(', ', array_keys($fields));
@@ -95,6 +149,13 @@ class APICore
         }
     }
 
+    /**
+     * Updates an existing record identified by its ID.
+     *
+     * @param int $id The ID of the record to update.
+     * @param array<string, mixed> $fields An associative array of field names and new values.
+     * @return void Sends JSON output and HTTP 200 or 404 code.
+     */
     public function update(int $id, array $fields): void
     {
         if (empty($fields)) {
@@ -125,6 +186,12 @@ class APICore
         }
     }
 
+    /**
+     * Deletes a record by its primary key ID.
+     *
+     * @param int $id The ID of the record to delete.
+     * @return void Sends JSON output and HTTP 200 or 404/409 code.
+     */
     public function delete(int $id): void
     {
         try {
@@ -150,6 +217,12 @@ class APICore
         }
     }
 
+    /**
+     * Checks if a record with the given ID exists in the current table.
+     *
+     * @param int $id The ID to check.
+     * @return bool True if the record exists, otherwise False.
+     */
     private function checkIfIdExists(int $id): bool
     {
         $stmt = $this->pdo->prepare("SELECT 1 FROM $this->tableName WHERE $this->idField = ?");

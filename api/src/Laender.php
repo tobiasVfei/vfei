@@ -55,6 +55,16 @@ try {
     echo json_encode(['message' => $e->getMessage()]);
 }
 
+/**
+ * Validates and prepares the data for a new country (Land) entry.
+ *
+ * Checks for the required 'country' field and sanitizes its string value.
+ *
+ * @param object|null $data The raw input data from json_decode.
+ * @return array<string, string> A sanitized array containing the 'country' field.
+ * @throws \Exception On invalid or missing data (HTTP 400).
+ * * @todo CRITICAL: Move this function to a dedicated validation class/file to prevent global namespace pollution.
+ */
 function validateAndPrepareCountryData(?object $data): array
 {
     if (!$data) {

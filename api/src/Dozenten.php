@@ -4,6 +4,16 @@ require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 require_once __DIR__ . '/Validation.php';
 
+/**
+ * Validates and prepares the data for a new lecturer (Dozent) entry.
+ *
+ * Checks for required fields, validates email and foreign key ID, and sanitizes string inputs.
+ * Note: 'birthdate' is optional but must be in YYYY-MM-DD format if provided.
+ *
+ * @param object|null $data The raw input data from json_decode.
+ * @return array<string, mixed> A sanitized, associative array ready for database insertion.
+ * @throws \Exception On invalid or missing data (HTTP 400).
+ */
 function validateAndPrepareDozentData(?object $data): array
 {
     if (!$data) {

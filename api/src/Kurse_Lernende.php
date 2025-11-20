@@ -3,6 +3,16 @@
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 
+/**
+ * Validates and prepares the junction data for Courses and Learners (tbl_kurse_lernende).
+ *
+ * Checks that both 'nr_kurs' and 'nr_lernende' are present and positive integers.
+ * The 'note' field is optional and sanitized if present.
+ *
+ * @param object|null $data The raw input data from json_decode.
+ * @return array<string, mixed> A sanitized, associative array ready for database insertion.
+ * @throws \Exception On invalid or missing data (HTTP 400).
+ */
 function validateAndPrepareKursLernenderData(?object $data): array
 {
     if (!$data) {

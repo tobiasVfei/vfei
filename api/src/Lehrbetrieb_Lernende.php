@@ -5,6 +5,16 @@ require_once __DIR__ . '/APICore.php';
 require_once __DIR__ . '/Validation.php';
 
 
+/**
+ * Validates and prepares the data for the Apprenticeship Relationship (Lehrbetrieb-Lernende).
+ *
+ * Checks for required IDs, ensures they are positive integers, and validates 'start' and 'ende' date formats (YYYY-MM-DD).
+ * Also checks for the required 'beruf' (profession) field.
+ *
+ * @param object|null $data The raw input data from json_decode.
+ * @return array<string, mixed> A sanitized, associative array ready for database insertion.
+ * @throws \Exception On invalid or missing data (HTTP 400).
+ */
 function validateAndPrepareBeziehungData(?object $data): array
 {
     if (!$data) {
@@ -14,7 +24,7 @@ function validateAndPrepareBeziehungData(?object $data): array
     $required = ['fk_id_lehrbetrieb', 'fk_id_lernende', 'start', 'ende', 'beruf'];
     foreach ($required as $f) {
         if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)) && $f !== 'beruf')) {
-             throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
+            throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
         }
     }
 
@@ -86,7 +96,6 @@ try {
 
         default:
             throw new Exception("Methode nicht erlaubt.", 405);
-            break;
     }
 
 } catch (PDOException $e) {

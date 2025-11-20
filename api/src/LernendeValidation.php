@@ -2,8 +2,22 @@
 
 require_once __DIR__ . '/Validation.php';
 
+/**
+ * Validator class for Learner (Lernender) data.
+ * Provides a static method for rigorous validation and preparation of learner records.
+ */
 class LernenderValidator
 {
+    /**
+     * Validates and prepares the data for a new learner entry.
+     *
+     * Performs strict checks on required fields, including 'birthdate', email format, and positive foreign key ID.
+     * Sanitizes string fields and handles optional fields like 'geschlecht' and 'email_privat'.
+     *
+     * @param object|null $data The raw input data from json_decode.
+     * @return array<string, mixed> A sanitized, associative array ready for database insertion.
+     * @throws \Exception On invalid or missing data (HTTP 400).
+     */
     public static function validateAndPrepare(?object $data): array
     {
         if (!$data) {
@@ -13,7 +27,7 @@ class LernenderValidator
         $required = ['vorname', 'nachname', 'strasse', 'plz', 'ort', 'fk_id_land', 'email', 'birthdate'];
         foreach ($required as $f) {
             if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)))) {
-                 throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
+                throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
             }
         }
 
