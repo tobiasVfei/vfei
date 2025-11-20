@@ -11,6 +11,20 @@ class APICore
         $this->pdo = $pdo;
         $this->tableName = $tableName;
         $this->idField = $idField;
+        self::setupHeaders();
+    }
+
+    public static function setupHeaders(): void
+    {
+        header("Content-Type: application/json; charset=UTF-8");
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
     }
 
     private static function sendErrorResponse(int $statusCode, string $message): void
@@ -24,21 +38,21 @@ class APICore
     {
         try {
             $orderSql = $orderBy ? "ORDER BY " . $orderBy : "";
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} {$orderSql}");
+            $stmt = $this->pdo->prepare("SELECT * FROM $this->tableName $orderSql");
             $stmt->execute();
             $data = $stmt->fetchAll();
 
             http_response_code(200);
             echo json_encode($data);
         } catch (PDOException $e) {
-            self::sendErrorResponse(500, "Serverfehler beim Abrufen von {$this->tableName}: " . $e->getMessage());
+            self::sendErrorResponse(500, "Serverfehler beim Abrufen von $this->tableName: " . $e->getMessage());
         }
     }
 
     public function readById(int $id): void
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE {$this->idField} = ?");
+            $stmt = $this->pdo->prepare("SELECT * FROM $this->tableName WHERE $this->idField = ?");
             $stmt->execute([$id]);
             $item = $stmt->fetch();
 
@@ -46,7 +60,7 @@ class APICore
                 http_response_code(200);
                 echo json_encode($item);
             } else {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID {$id} gefunden.");
+                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden.");
             }
         } catch (PDOException $e) {
             self::sendErrorResponse(500, "Serverfehler beim Abrufen des Eintrags: " . $e->getMessage());
@@ -59,7 +73,7 @@ class APICore
         $placeholders = implode(', ', array_fill(0, count($fields), '?'));
 
         try {
-            $sql = "INSERT INTO {$this->tableName} ({$fieldNames}) VALUES ({$placeholders})";
+            $sql = "INSERT INTO $this->tableName ($fieldNames) VALUES ($placeholders)";
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt->execute(array_values($fields))) {
@@ -87,17 +101,17 @@ class APICore
             self::sendErrorResponse(400, "Keine Felder zum Aktualisieren übermittelt.");
         }
 
-        $setClauses = array_map(fn($key) => "{$key} = ?", array_keys($fields));
+        $setClauses = array_map(fn($key) => "$key = ?", array_keys($fields));
         $setClause = implode(', ', $setClauses);
         $params = array_values($fields);
         $params[] = $id;
 
         try {
             if (!$this->checkIfIdExists($id)) {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID {$id} gefunden. Update nicht möglich.");
+                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden. Update nicht möglich.");
             }
 
-            $sql = "UPDATE {$this->tableName} SET {$setClause} WHERE {$this->idField} = ?";
+            $sql = "UPDATE $this->tableName SET $setClause WHERE $this->idField = ?";
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt->execute($params)) {
@@ -115,10 +129,10 @@ class APICore
     {
         try {
             if (!$this->checkIfIdExists($id)) {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID {$id} gefunden. Löschen nicht möglich.");
+                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden. Löschen nicht möglich.");
             }
 
-            $sql = "DELETE FROM {$this->tableName} WHERE {$this->idField} = ?";
+            $sql = "DELETE FROM $this->tableName WHERE $this->idField = ?";
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt->execute([$id])) {
@@ -138,74 +152,8 @@ class APICore
 
     private function checkIfIdExists(int $id): bool
     {
-        $stmt = $this->pdo->prepare("SELECT 1 FROM {$this->tableName} WHERE {$this->idField} = ?");
+        $stmt = $this->pdo->prepare("SELECT 1 FROM $this->tableName WHERE $this->idField = ?");
         $stmt->execute([$id]);
         return $stmt->fetchColumn() !== false;
-    }
-
-    public static function handleRequest(string $tableName, string $idField, callable $validationCallback, ?string $orderBy = null): void
-    {
-        require_once __DIR__ . '/../Database.php';
-
-        header("Content-Type: application/json; charset=UTF-8");
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-            http_response_code(204);
-            exit;
-        }
-
-        try {
-            $pdo = Database::connect();
-            $core = new self($pdo, $tableName, $idField);
-        } catch (PDOException $e) {
-            self::sendErrorResponse(500, "Datenbankverbindung fehlgeschlagen: " . $e->getMessage());
-        }
-
-        $requestMethod = $_SERVER["REQUEST_METHOD"];
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-        try {
-            switch ($requestMethod) {
-                case 'GET':
-                    if ($id !== false && $id > 0) {
-                        $core->readById($id);
-                    } else {
-                        $core->readAll($orderBy);
-                    }
-                    break;
-
-                case 'POST':
-                    $data = json_decode(file_get_contents("php://input"));
-                    $fields = $validationCallback($data);
-                    $core->create($fields);
-                    break;
-
-                case 'PUT':
-                    if ($id === false || $id <= 0) {
-                        throw new Exception("Ungültige ID für Update angegeben.", 400);
-                    }
-                    $data = json_decode(file_get_contents("php://input"));
-                    $fields = $validationCallback($data);
-                    $core->update($id, $fields);
-                    break;
-
-                case 'DELETE':
-                    if ($id === false || $id <= 0) {
-                        throw new Exception("Ungültige ID für Löschen angegeben.", 400);
-                    }
-                    $core->delete($id);
-                    break;
-
-                default:
-                    self::sendErrorResponse(405, "Methode nicht erlaubt.");
-                    break;
-            }
-        } catch (Exception $e) {
-            $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
-            self::sendErrorResponse($statusCode, $e->getMessage());
-        }
     }
 }

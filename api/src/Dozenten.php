@@ -13,7 +13,7 @@ function validateAndPrepareDozentData(?object $data): array
     $required = ['vorname', 'nachname', 'strasse', 'plz', 'ort', 'fk_id_land', 'email'];
     foreach ($required as $f) {
         if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)))) {
-             throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
+            throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
         }
     }
 
@@ -46,21 +46,12 @@ function validateAndPrepareDozentData(?object $data): array
     return array_filter($fields, fn($value) => !is_null($value));
 }
 
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
+    // Die Header werden hier im APICore-Konstruktor gesetzt
     $core = new APICore($pdo, 'tbl_dozenten', 'id_dozent');
 
     switch ($requestMethod) {
@@ -96,7 +87,6 @@ try {
 
         default:
             throw new Exception("Methode nicht erlaubt.", 405);
-            break;
     }
 
 } catch (PDOException $e) {

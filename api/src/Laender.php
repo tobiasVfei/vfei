@@ -3,21 +3,12 @@
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
+    // Die Header werden hier im APICore-Konstruktor gesetzt
     $core = new APICore($pdo, 'tbl_countries', 'id_country');
 
     switch ($requestMethod) {
@@ -53,7 +44,6 @@ try {
 
         default:
             throw new Exception("Methode nicht erlaubt.", 405);
-            break;
     }
 
 } catch (PDOException $e) {
@@ -72,7 +62,7 @@ function validateAndPrepareCountryData(?object $data): array
     }
 
     if (!isset($data->country) || empty(trim($data->country))) {
-         throw new Exception("Das Feld 'country' ist erforderlich und darf nicht leer sein.", 400);
+        throw new Exception("Das Feld 'country' ist erforderlich und darf nicht leer sein.", 400);
     }
 
     $fields = [
