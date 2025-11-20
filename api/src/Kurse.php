@@ -3,26 +3,56 @@
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/APICore.php';
 
+function validateAndPrepareKursData(?object $data): array
+{
+    if (!$data) {
+        throw new Exception("Ungültige Eingabedaten.", 400);
+    }
+
+    $required = ['kursnummer', 'kursthema', 'fk_id_dozent'];
+    foreach ($required as $f) {
+        if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)))) {
+            throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
+        }
+    }
+
+    if (!filter_var($data->fk_id_dozent, FILTER_VALIDATE_INT) || $data->fk_id_dozent <= 0) {
+        throw new Exception("Ungültige 'fk_id_dozent'. Muss eine positive Zahl sein.", 400);
+    }
+
+    $fields = [
+        'kursnummer'    => htmlspecialchars(strip_tags(trim($data->kursnummer))),
+        'kursthema'     => htmlspecialchars(strip_tags(trim($data->kursthema))),
+        'fk_id_dozent'  => filter_var($data->fk_id_dozent, FILTER_VALIDATE_INT),
+        'inhalt'        => isset($data->inhalt) ? htmlspecialchars(strip_tags(trim($data->inhalt))) : null,
+        'startdatum'    => isset($data->startdatum) ? htmlspecialchars(strip_tags(trim($data->startdatum))) : null,
+        'enddatum'      => isset($data->enddatum) ? htmlspecialchars(strip_tags(trim($data->enddatum))) : null,
+        'dauer'         => isset($data->dauer) ? filter_var($data->dauer, FILTER_VALIDATE_FLOAT) : null,
+    ];
+
+    return array_filter($fields, fn($value) => !is_null($value));
+}
+
+
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
-    // Die Header werden hier im APICore-Konstruktor gesetzt
-    $core = new APICore($pdo, 'tbl_countries', 'id_country');
+    $core = new APICore($pdo, 'tbl_kurse', 'id_kurs');
 
     switch ($requestMethod) {
         case 'GET':
             if ($id !== false && $id > 0) {
                 $core->readById($id);
             } else {
-                $core->readAll('country');
+                $core->readAll('kursnummer');
             }
             break;
 
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
-            $fields = validateAndPrepareCountryData($data);
+            $fields = validateAndPrepareKursData($data);
             $core->create($fields);
             break;
 
@@ -31,7 +61,7 @@ try {
                 throw new Exception("Ungültige ID für Update angegeben.", 400);
             }
             $data = json_decode(file_get_contents("php://input"));
-            $fields = validateAndPrepareCountryData($data);
+            $fields = validateAndPrepareKursData($data);
             $core->update($id, $fields);
             break;
 
@@ -53,21 +83,4 @@ try {
     $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
     http_response_code($statusCode);
     echo json_encode(['message' => $e->getMessage()]);
-}
-
-function validateAndPrepareCountryData(?object $data): array
-{
-    if (!$data) {
-        throw new Exception("Ungültige Eingabedaten.", 400);
-    }
-
-    if (!isset($data->country) || empty(trim($data->country))) {
-        throw new Exception("Das Feld 'country' ist erforderlich und darf nicht leer sein.", 400);
-    }
-
-    $fields = [
-        'country' => htmlspecialchars(strip_tags(trim($data->country))),
-    ];
-
-    return $fields;
 }
