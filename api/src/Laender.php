@@ -62,7 +62,6 @@ try {
  * @param object|null $data The raw input data from json_decode.
  * @return array<string, string> A sanitized array containing the 'country' field.
  * @throws \Exception On invalid or missing data (HTTP 400).
- * * @todo CRITICAL: Move this function to a dedicated validation class/file to prevent global namespace pollution.
  */
 function validateAndPrepareCountryData(?object $data): array
 {

@@ -60,7 +60,6 @@ try {
             if ($id !== false && $id > 0) {
                 $core->readById($id);
             } else {
-                // Erweiterte Filterung, die wir vorher besprochen hatten
                 $lehrbetrieb_id = filter_input(INPUT_GET, 'lehrbetrieb_id', FILTER_VALIDATE_INT);
                 $lernender_id = filter_input(INPUT_GET, 'lernender_id', FILTER_VALIDATE_INT);
 

@@ -58,7 +58,6 @@ try {
  * @param object|null $data The raw input data from json_decode.
  * @return array<string, mixed> A sanitized, associative array ready for database insertion.
  * @throws \Exception On invalid or missing data (HTTP 400).
- * * @todo CRITICAL: Move this function to a dedicated validation class/file to prevent global namespace pollution.
  */
 function validateAndPrepareLehrbetriebData(?object $data): array
 {
