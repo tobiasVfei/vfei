@@ -8,7 +8,6 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
-    // Die Header werden hier im APICore-Konstruktor gesetzt
     $core = new APICore($pdo, 'tbl_countries', 'id_country');
 
     switch ($requestMethod) {

@@ -27,14 +27,13 @@ class APICore
      * @param PDO $pdo The active PDO connection.
      * @param string $tableName The target table name.
      * @param string $idField The name of the primary key field.
-     * * @todo CRITICAL: Remove the call to `self::setupHeaders()` from the constructor. Headers should be set globally once at the script entry point.
      */
     public function __construct(PDO $pdo, string $tableName, string $idField)
     {
         $this->pdo = $pdo;
         $this->tableName = $tableName;
         $this->idField = $idField;
-        self::setupHeaders();
+        // self::setupHeaders(); // AUFRUF ENTFERNT
     }
 
     /**
