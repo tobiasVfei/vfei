@@ -57,7 +57,7 @@ try {
             if ($id !== false && $id > 0) {
                 $core->readById($id);
             } else {
-                $core->readAll('nr_kurs, nr_lernende');
+                $core->readAll();
             }
             break;
 

@@ -17,7 +17,7 @@ try {
             if ($id !== false && $id > 0) {
                 $core->readById($id);
             } else {
-                $core->readAll('nachname, vorname');
+                $core->readAll();
             }
             break;
 

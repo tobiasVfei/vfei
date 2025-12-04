@@ -67,7 +67,7 @@ try {
                     throw new Exception("Spezifische Filter-GETs müssen in APICore/einem Model implementiert werden.", 501);
                 }
 
-                $core->readAll('id_lehrbetrieb_lernende');
+                $core->readAll();
             }
             break;
 

@@ -85,21 +85,12 @@ class APICore
      * @param array $allowedSortColumns Optional: List of allowed columns for sorting.
      * @return void Sends JSON output and HTTP 200 code.
      */
-    public function readAll(?string $orderBy = null, array $allowedSortColumns = []): void
+    public function readAll(): void
     {
         try {
-            $orderSql = "";
+            $sql = "SELECT * FROM $this->tableName ORDER BY $this->idField";
 
-            if ($orderBy && !empty($allowedSortColumns)) {
-                if (in_array($orderBy, $allowedSortColumns)) {
-                    $orderSql = "ORDER BY " . $orderBy;
-                }
-            } elseif ($orderBy && empty($allowedSortColumns)) {
-                // Fallback for legacy calls without whitelist
-                $orderSql = "ORDER BY " . $orderBy;
-            }
-
-            $stmt = $this->pdo->prepare("SELECT * FROM $this->tableName $orderSql");
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $data = $stmt->fetchAll();
 
