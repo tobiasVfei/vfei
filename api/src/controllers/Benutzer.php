@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../system/APICore.php';
+require_once __DIR__ . '/../system/JwtHandler.php';
+require_once __DIR__ . '/../validators/BenutzerValidator.php';
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -70,34 +72,4 @@ try {
     $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
     http_response_code($statusCode);
     echo json_encode(['message' => $e->getMessage()]);
-}
-
-function validateAndPrepareBenutzerData(?object $data, bool $isUpdate): array
-{
-    if (!$data) {
-        throw new Exception("Ungültige Eingabedaten.", 400);
-    }
-
-    $fields = [];
-
-    if (isset($data->email)) {
-        if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
-            throw new Exception("Ungültige E-Mail-Adresse.", 400);
-        }
-        $fields['email'] = trim($data->email);
-    } elseif (!$isUpdate) {
-        throw new Exception("Das Feld 'email' ist erforderlich.", 400);
-    }
-
-    if (isset($data->password)) {
-        $pw = trim($data->password);
-        if (strlen($pw) < 8) {
-            throw new Exception("Das Passwort muss mindestens 8 Zeichen lang sein.", 400);
-        }
-        $fields['password_hash'] = password_hash($pw, PASSWORD_DEFAULT);
-    } elseif (!$isUpdate) {
-        throw new Exception("Das Feld 'password' ist erforderlich.", 400);
-    }
-
-    return $fields;
 }
