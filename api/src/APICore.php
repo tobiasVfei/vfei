@@ -11,10 +11,12 @@ class APICore
      * @var PDO The PDO connection object to the database.
      */
     private PDO $pdo;
+
     /**
      * @var string The name of the database table (e.g., 'tbl_dozenten').
      */
     private string $tableName;
+
     /**
      * @var string The name of the primary key field (e.g., 'id_dozent').
      */
@@ -23,6 +25,7 @@ class APICore
     /**
      * Constructor for initializing the APICore.
      * Sets the PDO connection, table name, and primary key field.
+     * Automatically sets the required HTTP headers.
      *
      * @param PDO $pdo The active PDO connection.
      * @param string $tableName The target table name.
@@ -33,7 +36,8 @@ class APICore
         $this->pdo = $pdo;
         $this->tableName = $tableName;
         $this->idField = $idField;
-        // self::setupHeaders(); // AUFRUF ENTFERNT
+
+        self::setupHeaders();
     }
 
     /**
@@ -44,6 +48,10 @@ class APICore
      */
     public static function setupHeaders(): void
     {
+        if (headers_sent()) {
+            return;
+        }
+
         header("Content-Type: application/json; charset=UTF-8");
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
@@ -71,14 +79,26 @@ class APICore
 
     /**
      * Retrieves all records from the target table.
+     * Accepts an optional whitelist for sorting columns to prevent SQL injection.
      *
-     * @param string|null $orderBy Optional SQL clause to order the results (e.g., 'nachname, vorname').
+     * @param string|null $orderBy Optional: Column name to sort by.
+     * @param array $allowedSortColumns Optional: List of allowed columns for sorting.
      * @return void Sends JSON output and HTTP 200 code.
      */
-    public function readAll(?string $orderBy = null): void
+    public function readAll(?string $orderBy = null, array $allowedSortColumns = []): void
     {
         try {
-            $orderSql = $orderBy ? "ORDER BY " . $orderBy : "";
+            $orderSql = "";
+
+            if ($orderBy && !empty($allowedSortColumns)) {
+                if (in_array($orderBy, $allowedSortColumns)) {
+                    $orderSql = "ORDER BY " . $orderBy;
+                }
+            } elseif ($orderBy && empty($allowedSortColumns)) {
+                // Fallback for legacy calls without whitelist
+                $orderSql = "ORDER BY " . $orderBy;
+            }
+
             $stmt = $this->pdo->prepare("SELECT * FROM $this->tableName $orderSql");
             $stmt->execute();
             $data = $stmt->fetchAll();
@@ -86,7 +106,7 @@ class APICore
             http_response_code(200);
             echo json_encode($data);
         } catch (PDOException $e) {
-            self::sendErrorResponse(500, "Serverfehler beim Abrufen von $this->tableName: " . $e->getMessage());
+            self::sendErrorResponse(500, "Server error while retrieving data: " . $e->getMessage());
         }
     }
 
@@ -107,21 +127,24 @@ class APICore
                 http_response_code(200);
                 echo json_encode($item);
             } else {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden.");
+                self::sendErrorResponse(404, "No entry found with ID $id.");
             }
         } catch (PDOException $e) {
-            self::sendErrorResponse(500, "Serverfehler beim Abrufen des Eintrags: " . $e->getMessage());
+            self::sendErrorResponse(500, "Server error while retrieving entry.");
         }
     }
 
     /**
      * Creates a new record in the database using prepared statement.
+     * Validates column names against allowed characters.
      *
-     * @param array<string, mixed> $fields An associative array of field names and values for the new record.
+     * @param array<string, mixed> $fields An associative array of field names and values.
      * @return void Sends JSON output and HTTP 201 code with the new ID.
      */
     public function create(array $fields): void
     {
+        $this->validateColumnNames(array_keys($fields));
+
         $fieldNames = implode(', ', array_keys($fields));
         $placeholders = implode(', ', array_fill(0, count($fields), '?'));
 
@@ -133,23 +156,20 @@ class APICore
                 $lastId = $this->pdo->lastInsertId();
                 http_response_code(201);
                 echo json_encode([
-                    'message' => 'Eintrag erfolgreich erstellt.',
+                    'message' => 'Entry successfully created.',
                     $this->idField => $lastId
                 ]);
             } else {
-                self::sendErrorResponse(500, "Fehler beim Erstellen des Eintrags.");
+                self::sendErrorResponse(500, "Error creating entry.");
             }
         } catch (PDOException $e) {
-            $msg = "Serverfehler beim Erstellen: " . $e->getMessage();
-            if ($e->getCode() == 23000) {
-                $msg = "Konflikt: Foreign Key-Verletzung oder Unique-Constraint-Verletzung.";
-            }
-            self::sendErrorResponse(500, $msg);
+            $this->handlePDOException($e, "creation");
         }
     }
 
     /**
      * Updates an existing record identified by its ID.
+     * Validates column names against allowed characters.
      *
      * @param int $id The ID of the record to update.
      * @param array<string, mixed> $fields An associative array of field names and new values.
@@ -158,8 +178,10 @@ class APICore
     public function update(int $id, array $fields): void
     {
         if (empty($fields)) {
-            self::sendErrorResponse(400, "Keine Felder zum Aktualisieren übermittelt.");
+            self::sendErrorResponse(400, "No fields provided for update.");
         }
+
+        $this->validateColumnNames(array_keys($fields));
 
         $setClauses = array_map(fn($key) => "$key = ?", array_keys($fields));
         $setClause = implode(', ', $setClauses);
@@ -168,7 +190,7 @@ class APICore
 
         try {
             if (!$this->checkIfIdExists($id)) {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden. Update nicht möglich.");
+                self::sendErrorResponse(404, "No entry found with ID $id. Update not possible.");
             }
 
             $sql = "UPDATE $this->tableName SET $setClause WHERE $this->idField = ?";
@@ -176,12 +198,12 @@ class APICore
 
             if ($stmt->execute($params)) {
                 http_response_code(200);
-                echo json_encode(['message' => 'Eintrag erfolgreich aktualisiert.']);
+                echo json_encode(['message' => 'Entry successfully updated.']);
             } else {
-                self::sendErrorResponse(500, "Fehler beim Aktualisieren des Eintrags.");
+                self::sendErrorResponse(500, "Error updating entry.");
             }
         } catch (PDOException $e) {
-            self::sendErrorResponse(500, "Serverfehler beim Aktualisieren: " . $e->getMessage());
+            $this->handlePDOException($e, "update");
         }
     }
 
@@ -195,7 +217,7 @@ class APICore
     {
         try {
             if (!$this->checkIfIdExists($id)) {
-                self::sendErrorResponse(404, "Kein Eintrag mit der ID $id gefunden. Löschen nicht möglich.");
+                self::sendErrorResponse(404, "No entry found with ID $id. Delete not possible.");
             }
 
             $sql = "DELETE FROM $this->tableName WHERE $this->idField = ?";
@@ -203,16 +225,17 @@ class APICore
 
             if ($stmt->execute([$id])) {
                 http_response_code(200);
-                echo json_encode(['message' => 'Eintrag erfolgreich gelöscht.']);
+                echo json_encode(['message' => 'Entry successfully deleted.']);
             } else {
-                self::sendErrorResponse(500, "Fehler beim Löschen des Eintrags.");
+                self::sendErrorResponse(500, "Error deleting entry.");
             }
         } catch (PDOException $e) {
-            $msg = "Serverfehler beim Löschen: " . $e->getMessage();
+            $msg = "Server error while deleting.";
             if ($e->getCode() == 23000) {
-                $msg = "Konflikt: Der Eintrag kann nicht gelöscht werden, da er noch in Verwendung ist (Foreign Key Constraint).";
+                $msg = "Conflict: Entry cannot be deleted because it is still referenced.";
+                self::sendErrorResponse(409, $msg);
             }
-            self::sendErrorResponse(409, $msg);
+            self::sendErrorResponse(500, $msg);
         }
     }
 
@@ -227,5 +250,36 @@ class APICore
         $stmt = $this->pdo->prepare("SELECT 1 FROM $this->tableName WHERE $this->idField = ?");
         $stmt->execute([$id]);
         return $stmt->fetchColumn() !== false;
+    }
+
+    /**
+     * Ensures that column names only contain valid characters (a-z, A-Z, 0-9, _).
+     * Prevents SQL Injection through array keys.
+     *
+     * @param array $columns List of column names to check.
+     * @throws void Terminates with 500 error if invalid column is found.
+     */
+    private function validateColumnNames(array $columns): void
+    {
+        foreach ($columns as $col) {
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $col)) {
+                self::sendErrorResponse(500, "Security Violation: Invalid column name '$col'.");
+            }
+        }
+    }
+
+    /**
+     * Centralized exception handling to hide internal DB errors from the client.
+     *
+     * @param PDOException $e
+     * @param string $action Context (e.g. "creation", "update")
+     */
+    private function handlePDOException(PDOException $e, string $action): void
+    {
+        $msg = "Server error during $action.";
+        if ($e->getCode() == 23000) {
+            $msg = "Data conflict: A unique value already exists or a relationship is invalid.";
+        }
+        self::sendErrorResponse(500, $msg);
     }
 }

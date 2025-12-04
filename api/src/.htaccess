@@ -1,0 +1,26 @@
+RewriteEngine On
+RewriteBase /api/src/
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^laender/([0-9]+)$ Laender.php?id=$1 [L,QSA]
+RewriteRule ^laender$ Laender.php [L,QSA]
+
+RewriteRule ^lehrbetriebe/([0-9]+)$ Lehrbetriebe.php?id=$1 [L,QSA]
+RewriteRule ^lehrbetriebe$ Lehrbetriebe.php [L,QSA]
+
+RewriteRule ^lernende/([0-9]+)$ Lernende.php?id=$1 [L,QSA]
+RewriteRule ^lernende$ Lernende.php [L,QSA]
+
+RewriteRule ^dozenten/([0-9]+)$ Dozenten.php?id=$1 [L,QSA]
+RewriteRule ^dozenten$ Dozenten.php [L,QSA]
+
+RewriteRule ^kurse/([0-9]+)$ Kurse.php?id=$1 [L,QSA]
+RewriteRule ^kurse$ Kurse.php [L,QSA]
+
+RewriteRule ^kurse_lernende/([0-9]+)$ Kurse_Lernende.php?id=$1 [L,QSA]
+RewriteRule ^kurse_lernende$ Kurse_Lernende.php [L,QSA]
+
+RewriteRule ^lehrbetrieb_lernende/([0-9]+)$ Lehrbetrieb_Lernende.php?id=$1 [L,QSA]
+RewriteRule ^lehrbetrieb_lernende$ Lehrbetrieb_Lernende.php [L,QSA]
