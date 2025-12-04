@@ -1,6 +1,6 @@
 <?php
 
-class KursValidator
+class KurseValidator
 {
     public static function validateAndPrepare(?object $data): array
     {

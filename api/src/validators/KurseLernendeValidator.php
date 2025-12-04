@@ -3,7 +3,7 @@
 /**
  * Validator class for Course-Learner Relationships (Kurse-Lernende).
  */
-class KursLernenderValidator
+class KurseLernendeValidator
 {
     /**
      * Validates and prepares the junction data for Courses and Learners (tbl_kurse_lernende).
