@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/JwtHandler.php';
 /**
  * Core class for REST API processing.
  * Provides generic CRUD (Create, Read, Update, Delete) operations for a single database table.
@@ -31,13 +31,16 @@ class APICore
      * @param string $tableName The target table name.
      * @param string $idField The name of the primary key field.
      */
-    public function __construct(PDO $pdo, string $tableName, string $idField)
+    public function __construct(PDO $pdo, string $tableName, string $idField, bool $requiresAuth = true)
     {
         $this->pdo = $pdo;
         $this->tableName = $tableName;
         $this->idField = $idField;
 
         self::setupHeaders();
+        if ($requiresAuth) {
+            JwtHandler::verifyAuthHeader();
+        }
     }
 
     /**

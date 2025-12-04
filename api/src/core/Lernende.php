@@ -22,7 +22,7 @@ try {
 
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
-            $fields = LernenderValidator::validateAndPrepare($data);
+            $fields = LernendeValidator::validateAndPrepare($data);
             $core->create($fields);
             break;
 
@@ -31,7 +31,7 @@ try {
                 throw new Exception("Ungültige ID für Update angegeben.", 400);
             }
             $data = json_decode(file_get_contents("php://input"));
-            $fields = LernenderValidator::validateAndPrepare($data);
+            $fields = LernendeValidator::validateAndPrepare($data);
             $core->update($id, $fields);
             break;
 

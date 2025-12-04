@@ -6,7 +6,7 @@ require_once __DIR__ . '/Validation.php';
  * Validator class for Learner (Lernender) data.
  * Provides a static method for rigorous validation and preparation of learner records.
  */
-class LernenderValidator
+class LernendeValidator
 {
     /**
      * Validates and prepares the data for a new learner entry.

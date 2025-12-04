@@ -3,7 +3,7 @@
 /**
  * Validator class for Apprenticeship Company (Lehrbetrieb) data.
  */
-class LehrbetriebValidator
+class LehrbetriebeValidator
 {
     /**
      * Validates and prepares the data for an apprenticeship company (Lehrbetrieb) entry.

@@ -24,3 +24,8 @@ RewriteRule ^kurse_lernende$ core/Kurse_Lernende.php [L,QSA]
 
 RewriteRule ^lehrbetrieb_lernende/([0-9]+)$ core/Lehrbetrieb_Lernende.php?id=$1 [L,QSA]
 RewriteRule ^lehrbetrieb_lernende$ core/Lehrbetrieb_Lernende.php [L,QSA]
+
+RewriteRule ^benutzer/([0-9]+)$ core/Benutzer.php?id=$1 [L,QSA]
+RewriteRule ^benutzer$ core/Benutzer.php [L,QSA]
+
+RewriteRule ^login$ core/Login.php [L,QSA]
