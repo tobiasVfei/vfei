@@ -2,51 +2,8 @@
 
 require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../APICore.php';
-require_once __DIR__ . '/../Validation.php';
-
-
-/**
- * Validates and prepares the data for the Apprenticeship Relationship (Lehrbetrieb-Lernende).
- *
- * Checks for required IDs, ensures they are positive integers, and validates 'start' and 'ende' date formats (YYYY-MM-DD).
- * Also checks for the required 'beruf' (profession) field.
- *
- * @param object|null $data The raw input data from json_decode.
- * @return array<string, mixed> A sanitized, associative array ready for database insertion.
- * @throws \Exception On invalid or missing data (HTTP 400).
- */
-function validateAndPrepareBeziehungData(?object $data): array
-{
-    if (!$data) {
-        throw new Exception("Ungültige Eingabedaten.", 400);
-    }
-
-    $required = ['fk_id_lehrbetrieb', 'fk_id_lernende', 'start', 'ende', 'beruf'];
-    foreach ($required as $f) {
-        if (!isset($data->$f) || (is_string($data->$f) && empty(trim($data->$f)) && $f !== 'beruf')) {
-            throw new Exception("Das Feld '$f' ist erforderlich und darf nicht leer sein.", 400);
-        }
-    }
-
-    if (!filter_var($data->fk_id_lehrbetrieb, FILTER_VALIDATE_INT) || $data->fk_id_lehrbetrieb <= 0 ||
-        !filter_var($data->fk_id_lernende, FILTER_VALIDATE_INT) || $data->fk_id_lernende <= 0) {
-        throw new Exception("Ungültige 'fk_id_lehrbetrieb' oder 'fk_id_lernende'. Muss eine positive Zahl sein.", 400);
-    }
-
-    if (!Validation::validateDate(trim($data->start)) || !Validation::validateDate(trim($data->ende))) {
-        throw new Exception("Ungültiges 'start' oder 'ende' Datum. Erwartetes Format: YYYY-MM-DD.", 400);
-    }
-
-    $fields = [
-        'fk_id_lehrbetrieb' => filter_var($data->fk_id_lehrbetrieb, FILTER_VALIDATE_INT),
-        'fk_id_lernende'    => filter_var($data->fk_id_lernende, FILTER_VALIDATE_INT),
-        'start'             => trim($data->start),
-        'ende'              => trim($data->ende),
-        'beruf'             => strip_tags(trim($data->beruf)),
-    ];
-
-    return array_filter($fields, fn($value) => !is_null($value));
-}
+require_once __DIR__ . '/../validators/Validation.php';
+require_once __DIR__ . '/../validators/Lehrbetrieb_LernendeValidator.php';
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
