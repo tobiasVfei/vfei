@@ -82,7 +82,6 @@ class APICore
 
     /**
      * Retrieves all records from the target table.
-     * Accepts an optional whitelist for sorting columns to prevent SQL injection.
      *
      * @param string|null $orderBy Optional: Column name to sort by.
      * @param array $allowedSortColumns Optional: List of allowed columns for sorting.

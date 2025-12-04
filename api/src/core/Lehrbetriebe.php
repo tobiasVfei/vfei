@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../APICore.php';
-require_once __DIR__ . '/../validators/Lehrbetrieb_LernendeValidator.php';
+require_once __DIR__ . '/../validators/Validator.php';
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);

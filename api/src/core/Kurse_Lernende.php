@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../APICore.php';
-require_once __DIR__ . '/../Kurse_LernendeValidator.php';
+require_once __DIR__ . '/../validators/Validator.php';
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -10,6 +10,12 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 try {
     $pdo = Database::connect();
     $core = new APICore($pdo, 'tbl_kurse_lernende', 'id_kurse_lernende');
+
+    $rules = [
+        'nr_kurs'     => 'required|int|positive',
+        'nr_lernende' => 'required|int|positive',
+        'note'        => 'string'
+    ];
 
     switch ($requestMethod) {
         case 'GET':
@@ -22,22 +28,22 @@ try {
 
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
-            $fields = KursLernenderValidator::validateAndPrepare($data);
+            $fields = Validator::validate($data, $rules);
             $core->create($fields);
             break;
 
         case 'PUT':
             if ($id === false || $id <= 0) {
-                throw new Exception("Ungültige ID für Update angegeben.", 400);
+                throw new Exception("Ungültige ID.", 400);
             }
             $data = json_decode(file_get_contents("php://input"));
-            $fields = KursLernenderValidator::validateAndPrepare($data);
+            $fields = Validator::validate($data, $rules);
             $core->update($id, $fields);
             break;
 
         case 'DELETE':
             if ($id === false || $id <= 0) {
-                throw new Exception("Ungültige ID für Löschen angegeben.", 400);
+                throw new Exception("Ungültige ID.", 400);
             }
             $core->delete($id);
             break;
@@ -46,11 +52,8 @@ try {
             throw new Exception("Methode nicht erlaubt.", 405);
     }
 
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['message' => "Datenbankfehler: " . $e->getMessage()]);
 } catch (Exception $e) {
-    $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
-    http_response_code($statusCode);
+    $code = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
+    http_response_code($code);
     echo json_encode(['message' => $e->getMessage()]);
 }
