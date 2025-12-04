@@ -1,27 +1,79 @@
 openapi: 3.0.0
 info:
   title: Modul 295 Kursverwaltung REST API
-  description: RESTful Backend zur Verwaltung von Lernenden, Dozenten und Kursen. Implementiert alle CRUD-Operationen.
+  description: RESTful Backend zur Verwaltung von Lernenden, Dozenten und Kursen.
   version: "1.0.0"
 servers:
+  # Passe diesen Pfad ggf. an deine Ordnerstruktur an (z.B. /api/src)
   - url: http://localhost/api/src
     description: Lokaler Entwicklungsserver
 
 # =========================================================================
-# SCHEMATA (Datenstrukturen)
+# SICHERHEIT & DATENMODELLE
 # =========================================================================
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
+    # --- LOGIN & BENUTZER ---
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "secret123"
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        expires_in:
+          type: integer
+
+    Benutzer:
+      type: object
+      properties:
+        id_benutzer:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - email
+
+    # --- HAUPT-ENTITÄTEN ---
     Country:
       type: object
       properties:
         id_country:
           type: integer
-          format: int32
           readOnly: true
         country:
           type: string
-          description: Name des Landes (z.B. Schweiz, Deutschland)
       required:
         - country
 
@@ -30,7 +82,6 @@ components:
       properties:
         id_lehrbetrieb:
           type: integer
-          format: int32
           readOnly: true
         firma:
           type: string
@@ -42,8 +93,6 @@ components:
           type: string
         land_id:
           type: integer
-          format: int32
-          description: Foreign Key zur tbl_countries (Wird als land_id gesendet)
       required:
         - firma
         - strasse
@@ -56,7 +105,6 @@ components:
       properties:
         id_lernende:
           type: integer
-          format: int32
           readOnly: true
         vorname:
           type: string
@@ -70,26 +118,12 @@ components:
           type: string
         fk_id_land:
           type: integer
-          format: int32
         email:
           type: string
           format: email
-        email_privat:
-          type: string
-          format: email
-          nullable: true
         birthdate:
           type: string
           format: date
-        geschlecht:
-          type: string
-          nullable: true
-        telefon:
-          type: string
-          nullable: true
-        handy:
-          type: string
-          nullable: true
       required:
         - vorname
         - nachname
@@ -105,7 +139,6 @@ components:
       properties:
         id_dozent:
           type: integer
-          format: int32
           readOnly: true
         vorname:
           type: string
@@ -119,20 +152,9 @@ components:
           type: string
         fk_id_land:
           type: integer
-          format: int32
         email:
           type: string
           format: email
-        telefon:
-          type: string
-          nullable: true
-        handy:
-          type: string
-          nullable: true
-        birthdate:
-          type: string
-          format: date
-          nullable: true
       required:
         - vorname
         - nachname
@@ -147,7 +169,6 @@ components:
       properties:
         id_kurs:
           type: integer
-          format: int32
           readOnly: true
         kursnummer:
           type: string
@@ -157,7 +178,6 @@ components:
           type: string
         fk_id_dozent:
           type: integer
-          format: int32
         startdatum:
           type: string
           format: date
@@ -175,26 +195,19 @@ components:
         - enddatum
         - dauer
 
-    # Verbindungstabellen-Schemas
+    # --- VERKNÜPFUNGEN ---
     KursLernender:
       type: object
       properties:
         id_kurse_lernende:
           type: integer
-          format: int32
           readOnly: true
-        # ACHTUNG: Der PHP-Input erwartet 'nr_kurs' und 'nr_lernende'
         nr_kurs:
           type: integer
-          format: int32
-          description: ID des Kurses (tbl_kurse.id_kurs)
         nr_lernende:
           type: integer
-          format: int32
-          description: ID des Lernenden (tbl_lernende.id_lernende)
         note:
           type: string
-          nullable: true
       required:
         - nr_kurs
         - nr_lernende
@@ -204,14 +217,11 @@ components:
       properties:
         id_lehrbetrieb_lernende:
           type: integer
-          format: int32
           readOnly: true
         fk_id_lehrbetrieb:
           type: integer
-          format: int32
         fk_id_lernende:
           type: integer
-          format: int32
         start:
           type: string
           format: date
@@ -220,7 +230,6 @@ components:
           format: date
         beruf:
           type: string
-          nullable: true
       required:
         - fk_id_lehrbetrieb
         - fk_id_lernende
@@ -228,38 +237,313 @@ components:
         - ende
 
 # =========================================================================
-# PATHS (Endpunkte)
-# Die Pfade wurden zu einem Eintrag pro Datei zusammengeführt,
-# um den "duplicated mapping key" Fehler zu vermeiden.
+# ENDPUNKTE (PATHS)
 # =========================================================================
 paths:
-  # Endpunkt: LÄNDER
-  /Laender.php:
-    get:
-      tags:
-        - Länder
-      summary: Alle Länder abrufen (oder Einzelnes Land per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID des Landes (optional)
+  # --- AUTH ---
+  /login:
+    post:
+      tags: [Auth]
+      summary: Login (Token erhalten)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         "200":
-          description: Liste aller Länder oder einzelnes Land
+          description: Erfolgreich
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Country'
-                  - $ref: '#/components/schemas/Country'
+                $ref: '#/components/schemas/LoginResponse'
+
+  # --- BENUTZER ---
+  /benutzer:
+    get:
+      tags: [Benutzer]
+      summary: Alle Benutzer auflisten
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Benutzer'
     post:
-      tags:
-        - Länder
+      tags: [Benutzer]
+      summary: Neuen Benutzer anlegen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Benutzer'
+      responses:
+        "201":
+          description: Created
+
+  /benutzer/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Benutzer]
+      summary: Einzelnen Benutzer abrufen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Benutzer'
+    put:
+      tags: [Benutzer]
+      summary: Benutzer aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Benutzer'
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Benutzer]
+      summary: Benutzer löschen
+      responses:
+        "200":
+          description: Deleted
+
+  # --- DOZENTEN ---
+  /dozenten:
+    get:
+      tags: [Dozenten]
+      security: [{bearerAuth: []}]
+      summary: Liste aller Dozenten
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dozent'
+    post:
+      tags: [Dozenten]
+      security: [{bearerAuth: []}]
+      summary: Dozent erstellen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dozent'
+      responses:
+        "201":
+          description: Created
+
+  /dozenten/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Dozenten]
+      security: [{bearerAuth: []}]
+      summary: Dozent abrufen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dozent'
+    put:
+      tags: [Dozenten]
+      security: [{bearerAuth: []}]
+      summary: Dozent aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dozent'
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Dozenten]
+      security: [{bearerAuth: []}]
+      summary: Dozent löschen
+      responses:
+        "200":
+          description: Deleted
+
+  # --- KURSE ---
+  /kurse:
+    get:
+      tags: [Kurse]
+      security: [{bearerAuth: []}]
+      summary: Liste aller Kurse
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Kurs'
+    post:
+      tags: [Kurse]
+      security: [{bearerAuth: []}]
+      summary: Kurs erstellen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kurs'
+      responses:
+        "201":
+          description: Created
+
+  /kurse/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Kurse]
+      security: [{bearerAuth: []}]
+      summary: Kurs abrufen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kurs'
+    put:
+      tags: [Kurse]
+      security: [{bearerAuth: []}]
+      summary: Kurs aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kurs'
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Kurse]
+      security: [{bearerAuth: []}]
+      summary: Kurs löschen
+      responses:
+        "200":
+          description: Deleted
+
+  # --- KURSE-LERNENDE ---
+  /kurse_lernende:
+    get:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Verknüpfungen Kurs-Lernende
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KursLernender'
+    post:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Verknüpfung erstellen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KursLernender'
+      responses:
+        "201":
+          description: Created
+
+  /kurse_lernende/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Einzelne Verknüpfung
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KursLernender'
+    put:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KursLernender'
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Löschen
+      responses:
+        "200":
+          description: Deleted
+
+  # --- LÄNDER ---
+  /laender:
+    get:
+      tags: [Länder]
+      security: [{bearerAuth: []}]
+      summary: Alle Länder auflisten
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+    post:
+      tags: [Länder]
+      security: [{bearerAuth: []}]
       summary: Neues Land erstellen
       requestBody:
         required: true
@@ -269,27 +553,30 @@ paths:
               $ref: '#/components/schemas/Country'
       responses:
         "201":
-          description: Land erfolgreich erstellt
+          description: Created
+
+  /laender/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Länder]
+      security: [{bearerAuth: []}]
+      summary: Einzelnes Land abrufen
+      responses:
+        "200":
+          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_country:
-                    type: integer
+                $ref: '#/components/schemas/Country'
     put:
-      tags:
-        - Länder
-      summary: Land aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Landes
+      tags: [Länder]
+      security: [{bearerAuth: []}]
+      summary: Land aktualisieren
       requestBody:
         required: true
         content:
@@ -298,50 +585,34 @@ paths:
               $ref: '#/components/schemas/Country'
       responses:
         "200":
-          description: Land erfolgreich aktualisiert
+          description: Updated
     delete:
-      tags:
-        - Länder
-      summary: Land löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Landes
+      tags: [Länder]
+      security: [{bearerAuth: []}]
+      summary: Land löschen
       responses:
         "200":
-          description: Land erfolgreich gelöscht
+          description: Deleted
 
-  # Endpunkt: LEHRBETRIEBE
-  /Lehrbetriebe.php:
+  # --- LEHRBETRIEBE ---
+  /lehrbetriebe:
     get:
-      tags:
-        - Lehrbetriebe
-      summary: Alle Lehrbetriebe abrufen (oder Einzelnen Betrieb per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID des Lehrbetriebs (optional)
+      tags: [Lehrbetriebe]
+      security: [{bearerAuth: []}]
+      summary: Alle Lehrbetriebe auflisten
       responses:
         "200":
-          description: Liste aller Lehrbetriebe oder einzelner Betrieb
+          description: OK
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Lehrbetrieb'
-                  - $ref: '#/components/schemas/Lehrbetrieb'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lehrbetrieb'
     post:
-      tags:
-        - Lehrbetriebe
-      summary: Neuen Lehrbetrieb erstellen
+      tags: [Lehrbetriebe]
+      security: [{bearerAuth: []}]
+      summary: Erstellen
       requestBody:
         required: true
         content:
@@ -350,27 +621,30 @@ paths:
               $ref: '#/components/schemas/Lehrbetrieb'
       responses:
         "201":
-          description: Lehrbetrieb erfolgreich erstellt
+          description: Created
+
+  /lehrbetriebe/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Lehrbetriebe]
+      security: [{bearerAuth: []}]
+      summary: Einzelnen Betrieb abrufen
+      responses:
+        "200":
+          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_lehrbetrieb:
-                    type: integer
+                $ref: '#/components/schemas/Lehrbetrieb'
     put:
-      tags:
-        - Lehrbetriebe
-      summary: Lehrbetrieb aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Lehrbetriebs
+      tags: [Lehrbetriebe]
+      security: [{bearerAuth: []}]
+      summary: Betrieb aktualisieren
       requestBody:
         required: true
         content:
@@ -379,374 +653,34 @@ paths:
               $ref: '#/components/schemas/Lehrbetrieb'
       responses:
         "200":
-          description: Lehrbetrieb erfolgreich aktualisiert
+          description: Updated
     delete:
-      tags:
-        - Lehrbetriebe
-      summary: Lehrbetrieb löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Lehrbetriebs
+      tags: [Lehrbetriebe]
+      security: [{bearerAuth: []}]
+      summary: Betrieb löschen
       responses:
         "200":
-          description: Lehrbetrieb erfolgreich gelöscht
+          description: Deleted
 
-  # Endpunkt: LERNENDE
-  /Lernende.php:
+  # --- LEHRBETRIEB-LERNENDE ---
+  /lehrbetrieb_lernende:
     get:
-      tags:
-        - Lernende
-      summary: Alle Lernenden abrufen (oder Einzelnen Lernenden per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID des Lernenden (optional)
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Verknüpfungen Lehrbetrieb-Lernende
       responses:
         "200":
-          description: Liste aller Lernenden oder einzelner Lernender
+          description: OK
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Lernender'
-                  - $ref: '#/components/schemas/Lernender'
+                type: array
+                items:
+                  $ref: '#/components/schemas/LehrbetriebLernender'
     post:
-      tags:
-        - Lernende
-      summary: Neuen Lernenden erstellen
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Lernender'
-      responses:
-        "201":
-          description: Lernender erfolgreich erstellt
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_lernende:
-                    type: integer
-    put:
-      tags:
-        - Lernende
-      summary: Lernenden aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Lernenden
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Lernender'
-      responses:
-        "200":
-          description: Lernender erfolgreich aktualisiert
-    delete:
-      tags:
-        - Lernende
-      summary: Lernenden löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Lernenden
-      responses:
-        "200":
-          description: Lernender erfolgreich gelöscht
-
-  # Endpunkt: DOZENTEN
-  /Dozenten.php:
-    get:
-      tags:
-        - Dozenten
-      summary: Alle Dozenten abrufen (oder Einzelnen Dozenten per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID des Dozenten (optional)
-      responses:
-        "200":
-          description: Liste aller Dozenten oder einzelner Dozent
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Dozent'
-                  - $ref: '#/components/schemas/Dozent'
-    post:
-      tags:
-        - Dozenten
-      summary: Neuen Dozenten erstellen
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Dozent'
-      responses:
-        "201":
-          description: Dozent erfolgreich erstellt
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_dozent:
-                    type: integer
-    put:
-      tags:
-        - Dozenten
-      summary: Dozent aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Dozenten
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Dozent'
-      responses:
-        "200":
-          description: Dozent erfolgreich aktualisiert
-    delete:
-      tags:
-        - Dozenten
-      summary: Dozent löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Dozenten
-      responses:
-        "200":
-          description: Dozent erfolgreich gelöscht
-
-  # Endpunkt: KURSE
-  /Kurse.php:
-    get:
-      tags:
-        - Kurse
-      summary: Alle Kurse abrufen (oder Einzelnen Kurs per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID des Kurses (optional)
-      responses:
-        "200":
-          description: Liste aller Kurse oder einzelner Kurs
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/Kurs'
-                  - $ref: '#/components/schemas/Kurs'
-    post:
-      tags:
-        - Kurse
-      summary: Neuen Kurs erstellen
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Kurs'
-      responses:
-        "201":
-          description: Kurs erfolgreich erstellt
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_kurs:
-                    type: integer
-    put:
-      tags:
-        - Kurse
-      summary: Kurs aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Kurses
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Kurs'
-      responses:
-        "200":
-          description: Kurs erfolgreich aktualisiert
-    delete:
-      tags:
-        - Kurse
-      summary: Kurs löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID des Kurses
-      responses:
-        "200":
-          description: Kurs erfolgreich gelöscht
-
-  # Endpunkt: KURSE_LERNENDE (Verbindungstabelle)
-  /Kurse_Lernende.php:
-    get:
-      tags:
-        - Verbindungen
-      summary: Alle Kurs-Lernenden-Verknüpfungen abrufen (oder Einzelne per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID der Verknüpfung (optional)
-      responses:
-        "200":
-          description: Liste aller Verknüpfungen oder einzelne Verknüpfung
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/KursLernender'
-                  - $ref: '#/components/schemas/KursLernender'
-    post:
-      tags:
-        - Verbindungen
-      summary: Neue Kurs-Lernenden-Verknüpfung erstellen
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/KursLernender'
-      responses:
-        "201":
-          description: Verknüpfung erfolgreich erstellt
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_kurse_lernende:
-                    type: integer
-    put:
-      tags:
-        - Verbindungen
-      summary: Verknüpfung aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID der Verknüpfung
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/KursLernender'
-      responses:
-        "200":
-          description: Verknüpfung erfolgreich aktualisiert
-    delete:
-      tags:
-        - Verbindungen
-      summary: Verknüpfung löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID der Verknüpfung
-      responses:
-        "200":
-          description: Verknüpfung erfolgreich gelöscht
-
-  # Endpunkt: LEHRBETRIEB_LERNENDE (Verbindungstabelle)
-  /Lehrbetrieb_Lernende.php:
-    get:
-      tags:
-        - Verbindungen
-      summary: Alle Lehrbetrieb-Lernenden-Verknüpfungen abrufen (oder Einzelne per ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: ID der Verknüpfung (optional)
-      responses:
-        "200":
-          description: Liste aller Verknüpfungen oder einzelne Verknüpfung
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/LehrbetriebLernender'
-                  - $ref: '#/components/schemas/LehrbetriebLernender'
-    post:
-      tags:
-        - Verbindungen
-      summary: Neue Lehrbetrieb-Lernenden-Verknüpfung erstellen
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Verknüpfung erstellen
       requestBody:
         required: true
         content:
@@ -755,27 +689,30 @@ paths:
               $ref: '#/components/schemas/LehrbetriebLernender'
       responses:
         "201":
-          description: Verknüpfung erfolgreich erstellt
+          description: Created
+
+  /lehrbetrieb_lernende/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Einzelne Verknüpfung
+      responses:
+        "200":
+          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  id_lehrbetrieb_lernende:
-                    type: integer
+                $ref: '#/components/schemas/LehrbetriebLernender'
     put:
-      tags:
-        - Verbindungen
-      summary: Verknüpfung aktualisieren (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID der Verknüpfung
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Aktualisieren
       requestBody:
         required: true
         content:
@@ -784,18 +721,79 @@ paths:
               $ref: '#/components/schemas/LehrbetriebLernender'
       responses:
         "200":
-          description: Verknüpfung erfolgreich aktualisiert
+          description: Updated
     delete:
-      tags:
-        - Verbindungen
-      summary: Verknüpfung löschen (via ?id=X)
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID der Verknüpfung
+      tags: [Verbindungen]
+      security: [{bearerAuth: []}]
+      summary: Löschen
       responses:
         "200":
-          description: Verknüpfung erfolgreich gelöscht
+          description: Deleted
+
+  # --- LERNENDE ---
+  /lernende:
+    get:
+      tags: [Lernende]
+      security: [{bearerAuth: []}]
+      summary: Alle Lernenden auflisten
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lernender'
+    post:
+      tags: [Lernende]
+      security: [{bearerAuth: []}]
+      summary: Erstellen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lernender'
+      responses:
+        "201":
+          description: Created
+
+  /lernende/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Lernende]
+      security: [{bearerAuth: []}]
+      summary: Einzelnen Lernenden abrufen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lernender'
+    put:
+      tags: [Lernende]
+      security: [{bearerAuth: []}]
+      summary: Aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lernender'
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Lernende]
+      security: [{bearerAuth: []}]
+      summary: Löschen
+      responses:
+        "200":
+          description: Deleted
