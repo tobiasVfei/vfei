@@ -21,10 +21,15 @@ class JwtHandler
     {
         $headers = apache_request_headers();
         $token = null;
+        $authHeader = $headers['Authorization'] ?? null;
+
+        if (!$authHeader && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        }
 
         if (isset($headers['Authorization'])) {
             $matches = [];
-            if (preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
+            if (preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
                 $token = $matches[1];
             }
         }
