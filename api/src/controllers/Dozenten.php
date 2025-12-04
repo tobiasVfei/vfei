@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Controller for managing Lecturers (Dozenten).
+ * Utilizes BaseController for standard CRUD operations on 'tbl_dozenten'.
+ */
+
 require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Controller for managing Students/Apprentices (Lernende).
+ * Utilizes BaseController for standard CRUD operations on 'tbl_lernende'.
+ */
+
 require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [

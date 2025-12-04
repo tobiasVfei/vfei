@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Controller for managing Courses (Kurse).
+ * Utilizes BaseController for standard CRUD operations on 'tbl_kurse'.
+ */
+
 require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [

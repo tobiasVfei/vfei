@@ -36,7 +36,6 @@ class BenutzerValidator
             }
             $fields['password_hash'] = password_hash($pw, PASSWORD_DEFAULT);
         } elseif (!$isUpdate && !isset($data->password_hash)) {
-            // A password or hash must be present during creation
             throw new Exception("The 'password' field is required.", 400);
         }
 

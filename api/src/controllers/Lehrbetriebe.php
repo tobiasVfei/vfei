@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Controller for managing Companies/Apprenticeship Providers (Lehrbetriebe).
+ * Utilizes BaseController for standard CRUD operations on 'tbl_lehrbetriebe'.
+ */
+
 require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Controller for managing the relationship between Companies and Students (Lehrbetrieb <-> Lernende).
+ * Tracks apprenticeships including start and end dates.
+ */
+
 require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [
