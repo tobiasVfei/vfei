@@ -31,12 +31,12 @@ function validateAndPrepareKursData(?object $data): array
     }
 
     $fields = [
-        'kursnummer'    => htmlspecialchars(strip_tags(trim($data->kursnummer))),
-        'kursthema'     => htmlspecialchars(strip_tags(trim($data->kursthema))),
+        'kursnummer'    => strip_tags(trim($data->kursnummer)),
+        'kursthema'     => strip_tags(trim($data->kursthema)),
         'fk_id_dozent'  => filter_var($data->fk_id_dozent, FILTER_VALIDATE_INT),
-        'inhalt'        => isset($data->inhalt) ? htmlspecialchars(strip_tags(trim($data->inhalt))) : null,
-        'startdatum'    => isset($data->startdatum) ? htmlspecialchars(strip_tags(trim($data->startdatum))) : null,
-        'enddatum'      => isset($data->enddatum) ? htmlspecialchars(strip_tags(trim($data->enddatum))) : null,
+        'inhalt'        => isset($data->inhalt) ? strip_tags(trim($data->inhalt)) : null,
+        'startdatum'    => isset($data->startdatum) ? strip_tags(trim($data->startdatum)) : null,
+        'enddatum'      => isset($data->enddatum) ? strip_tags(trim($data->enddatum)) : null,
         'dauer'         => isset($data->dauer) ? filter_var($data->dauer, FILTER_VALIDATE_FLOAT) : null,
     ];
 

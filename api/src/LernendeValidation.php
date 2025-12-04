@@ -41,22 +41,19 @@ class LernenderValidator
             throw new Exception("Ungültiges Geburtsdatum. Erwartetes Format: YYYY-MM-DD.", 400);
         }
 
-        $email_privat = isset($data->email_privat) && filter_var(trim($data->email_privat), FILTER_VALIDATE_EMAIL) ? filter_var(trim($data->email_privat), FILTER_VALIDATE_EMAIL) : null;
-        $geschlecht = isset($data->geschlecht) && !empty(trim($data->geschlecht)) ? htmlspecialchars(strip_tags(trim($data->geschlecht))) : null;
-
         $fields = [
-            'vorname'       => htmlspecialchars(strip_tags(trim($data->vorname))),
-            'nachname'      => htmlspecialchars(strip_tags(trim($data->nachname))),
-            'strasse'       => htmlspecialchars(strip_tags(trim($data->strasse))),
-            'plz'           => htmlspecialchars(strip_tags(trim($data->plz))),
-            'ort'           => htmlspecialchars(strip_tags(trim($data->ort))),
+            'vorname'       => strip_tags(trim($data->vorname)),
+            'nachname'      => strip_tags(trim($data->nachname)),
+            'strasse'       => strip_tags(trim($data->strasse)),
+            'plz'           => strip_tags(trim($data->plz)),
+            'ort'           => strip_tags(trim($data->ort)),
             'fk_id_land'    => filter_var($data->fk_id_land, FILTER_VALIDATE_INT),
             'email'         => filter_var(trim($data->email), FILTER_VALIDATE_EMAIL),
             'birthdate'     => trim($data->birthdate),
-            'geschlecht'    => $geschlecht,
-            'telefon'       => isset($data->telefon) ? htmlspecialchars(strip_tags(trim($data->telefon))) : null,
-            'handy'         => isset($data->handy) ? htmlspecialchars(strip_tags(trim($data->handy))) : null,
-            'email_privat'  => $email_privat,
+            'geschlecht'    => !empty($data->geschlecht) ? strip_tags(trim($data->geschlecht)) : null,
+            'telefon'       => isset($data->telefon) ? strip_tags(trim($data->telefon)) : null,
+            'handy'         => isset($data->handy) ? strip_tags(trim($data->handy)) : null,
+            'email_privat'  => filter_var(trim($data->email_privat ?? ''), FILTER_VALIDATE_EMAIL) ?: null,
         ];
 
         return array_filter($fields, fn($value) => !is_null($value));

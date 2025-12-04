@@ -74,7 +74,7 @@ function validateAndPrepareCountryData(?object $data): array
     }
 
     $fields = [
-        'country' => htmlspecialchars(strip_tags(trim($data->country))),
+        'country' => strip_tags(trim($data->country)),
     ];
 
     return $fields;

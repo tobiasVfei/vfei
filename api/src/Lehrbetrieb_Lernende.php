@@ -42,7 +42,7 @@ function validateAndPrepareBeziehungData(?object $data): array
         'fk_id_lernende'    => filter_var($data->fk_id_lernende, FILTER_VALIDATE_INT),
         'start'             => trim($data->start),
         'ende'              => trim($data->ende),
-        'beruf'             => htmlspecialchars(strip_tags(trim($data->beruf))),
+        'beruf'             => strip_tags(trim($data->beruf)),
     ];
 
     return array_filter($fields, fn($value) => !is_null($value));

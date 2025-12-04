@@ -41,15 +41,15 @@ function validateAndPrepareDozentData(?object $data): array
     }
 
     $fields = [
-        'vorname'       => htmlspecialchars(strip_tags(trim($data->vorname))),
-        'nachname'      => htmlspecialchars(strip_tags(trim($data->nachname))),
-        'strasse'       => htmlspecialchars(strip_tags(trim($data->strasse))),
-        'plz'           => htmlspecialchars(strip_tags(trim($data->plz))),
-        'ort'           => htmlspecialchars(strip_tags(trim($data->ort))),
+        'vorname'       => strip_tags(trim($data->vorname)),
+        'nachname'      => strip_tags(trim($data->nachname)),
+        'strasse'       => strip_tags(trim($data->strasse)),
+        'plz'           => strip_tags(trim($data->plz)),
+        'ort'           => strip_tags(trim($data->ort)),
         'fk_id_land'    => filter_var($data->fk_id_land, FILTER_VALIDATE_INT),
         'email'         => filter_var(trim($data->email), FILTER_VALIDATE_EMAIL),
-        'telefon'       => isset($data->telefon) ? htmlspecialchars(strip_tags(trim($data->telefon))) : null,
-        'handy'         => isset($data->handy) ? htmlspecialchars(strip_tags(trim($data->handy))) : null,
+        'telefon'       => isset($data->telefon) ? strip_tags(trim($data->telefon)) : null,
+        'handy'         => isset($data->handy) ? strip_tags(trim($data->handy)) : null,
         'birthdate'     => $birthdate,
     ];
 
@@ -61,7 +61,6 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
-    // Die Header werden hier im APICore-Konstruktor gesetzt
     $core = new APICore($pdo, 'tbl_dozenten', 'id_dozent');
 
     switch ($requestMethod) {

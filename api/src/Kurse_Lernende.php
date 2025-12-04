@@ -39,7 +39,7 @@ function validateAndPrepareKursLernenderData(?object $data): array
     $fields = [
         'nr_kurs'     => $nr_kurs,
         'nr_lernende' => $nr_lernende,
-        'note'        => isset($data->note) ? htmlspecialchars(strip_tags(trim($data->note))) : null,
+        'note'        => isset($data->note) ? strip_tags(trim($data->note)) : null,
     ];
 
     return array_filter($fields, fn($value) => !is_null($value));

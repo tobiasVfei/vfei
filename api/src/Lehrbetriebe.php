@@ -77,10 +77,10 @@ function validateAndPrepareLehrbetriebData(?object $data): array
     }
 
     $fields = [
-        'firma'     => htmlspecialchars(strip_tags(trim($data->firma))),
-        'strasse'   => htmlspecialchars(strip_tags(trim($data->strasse))),
-        'plz'       => htmlspecialchars(strip_tags(trim($data->plz))),
-        'ort'       => htmlspecialchars(strip_tags(trim($data->ort))),
+        'firma'     => strip_tags(trim($data->firma)),
+        'strasse'   => strip_tags(trim($data->strasse)),
+        'plz'       => strip_tags(trim($data->plz)),
+        'ort'       => strip_tags(trim($data->ort)),
         'land_id'   => filter_var($data->land_id, FILTER_VALIDATE_INT),
     ];
 

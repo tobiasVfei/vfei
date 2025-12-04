@@ -9,7 +9,6 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 try {
     $pdo = Database::connect();
-    // This API endpoint handles CRUD operations for the 'tbl_lernende' table.
     $core = new APICore($pdo, 'tbl_lernende', 'id_lernende');
 
     switch ($requestMethod) {
