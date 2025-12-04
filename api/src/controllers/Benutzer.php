@@ -45,7 +45,7 @@ try {
 
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
-            $fields = validateAndPrepareBenutzerData($data, false);
+            $fields = BenutzerValidator::validateAndPrepareBenutzerData($data, false);
             $core->create($fields);
             break;
 
@@ -55,7 +55,7 @@ try {
                 throw new Exception("Invalid ID for update.", 400);
             }
             $data = json_decode(file_get_contents("php://input"));
-            $fields = validateAndPrepareBenutzerData($data, true);
+            $fields = BenutzerValidator::validateAndPrepareBenutzerData($data, true);
             $core->update($id, $fields);
             break;
 
