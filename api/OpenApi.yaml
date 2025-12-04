@@ -91,14 +91,11 @@ components:
           type: string
         ort:
           type: string
-        land_id:
-          type: integer
       required:
         - firma
         - strasse
         - plz
         - ort
-        - land_id
 
     Lernender:
       type: object
@@ -116,7 +113,7 @@ components:
           type: string
         ort:
           type: string
-        fk_id_land:
+        nr_land:
           type: integer
         email:
           type: string
@@ -130,7 +127,7 @@ components:
         - strasse
         - plz
         - ort
-        - fk_id_land
+        - nr_land
         - email
         - birthdate
 
@@ -150,7 +147,7 @@ components:
           type: string
         ort:
           type: string
-        fk_id_land:
+        nr_land:
           type: integer
         email:
           type: string
@@ -161,7 +158,7 @@ components:
         - strasse
         - plz
         - ort
-        - fk_id_land
+        - nr_land
         - email
 
     Kurs:
@@ -176,7 +173,7 @@ components:
           type: string
         inhalt:
           type: string
-        fk_id_dozent:
+        nr_dozent:
           type: integer
         startdatum:
           type: string
@@ -185,12 +182,12 @@ components:
           type: string
           format: date
         dauer:
-          type: string
+          type: string # Korrigiert: Entspricht dem VARCHAR(50) Typ in der DB
       required:
         - kursnummer
         - kursthema
         - inhalt
-        - fk_id_dozent
+        - nr_dozent
         - startdatum
         - enddatum
         - dauer
@@ -207,7 +204,7 @@ components:
         nr_lernende:
           type: integer
         note:
-          type: string
+          type: string # Korrigiert: Entspricht der 'string' Validierungsregel im Controller
       required:
         - nr_kurs
         - nr_lernende
@@ -218,9 +215,9 @@ components:
         id_lehrbetrieb_lernende:
           type: integer
           readOnly: true
-        fk_id_lehrbetrieb:
+        nr_lehrbetrieb:
           type: integer
-        fk_id_lernende:
+        nr_lernende:
           type: integer
         start:
           type: string
@@ -231,8 +228,8 @@ components:
         beruf:
           type: string
       required:
-        - fk_id_lehrbetrieb
-        - fk_id_lernende
+        - nr_lehrbetrieb
+        - nr_lernende
         - start
         - ende
 
@@ -460,21 +457,8 @@ paths:
 
   # --- KURSE-LERNENDE ---
   /kurse_lernende:
-    get:
-      tags: [Verbindungen]
-      security: [{bearerAuth: []}]
-      summary: Verknüpfungen Kurs-Lernende
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/KursLernender'
     post:
-      tags: [Verbindungen]
+      tags: [Kurse-Lernende]
       security: [{bearerAuth: []}]
       summary: Verknüpfung erstellen
       requestBody:
@@ -486,6 +470,19 @@ paths:
       responses:
         "201":
           description: Created
+    get:
+      tags: [Kurse-Lernende]
+      security: [{bearerAuth: []}]
+      summary: Liste der Kurs-Lernenden Verknüpfungen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KursLernender'
 
   /kurse_lernende/{id}:
     parameters:
@@ -495,9 +492,9 @@ paths:
         schema:
           type: integer
     get:
-      tags: [Verbindungen]
+      tags: [Kurse-Lernende]
       security: [{bearerAuth: []}]
-      summary: Einzelne Verknüpfung
+      summary: Einzelne Verknüpfung abrufen
       responses:
         "200":
           description: OK
@@ -506,9 +503,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/KursLernender'
     put:
-      tags: [Verbindungen]
+      tags: [Kurse-Lernende]
       security: [{bearerAuth: []}]
-      summary: Aktualisieren
+      summary: Verknüpfung aktualisieren
       requestBody:
         required: true
         content:
@@ -519,9 +516,9 @@ paths:
         "200":
           description: Updated
     delete:
-      tags: [Verbindungen]
+      tags: [Kurse-Lernende]
       security: [{bearerAuth: []}]
-      summary: Löschen
+      summary: Verknüpfung löschen
       responses:
         "200":
           description: Deleted
@@ -664,21 +661,8 @@ paths:
 
   # --- LEHRBETRIEB-LERNENDE ---
   /lehrbetrieb_lernende:
-    get:
-      tags: [Verbindungen]
-      security: [{bearerAuth: []}]
-      summary: Verknüpfungen Lehrbetrieb-Lernende
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LehrbetriebLernender'
     post:
-      tags: [Verbindungen]
+      tags: [Lehrbetrieb-Lernende]
       security: [{bearerAuth: []}]
       summary: Verknüpfung erstellen
       requestBody:
@@ -690,6 +674,19 @@ paths:
       responses:
         "201":
           description: Created
+    get:
+      tags: [Lehrbetrieb-Lernende]
+      security: [{bearerAuth: []}]
+      summary: Liste der Lehrbetrieb-Lernende Verknüpfungen
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LehrbetriebLernender'
 
   /lehrbetrieb_lernende/{id}:
     parameters:
@@ -699,9 +696,9 @@ paths:
         schema:
           type: integer
     get:
-      tags: [Verbindungen]
+      tags: [Lehrbetrieb-Lernende]
       security: [{bearerAuth: []}]
-      summary: Einzelne Verknüpfung
+      summary: Einzelne Verknüpfung abrufen
       responses:
         "200":
           description: OK
@@ -710,9 +707,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/LehrbetriebLernender'
     put:
-      tags: [Verbindungen]
+      tags: [Lehrbetrieb-Lernende]
       security: [{bearerAuth: []}]
-      summary: Aktualisieren
+      summary: Verknüpfung aktualisieren
       requestBody:
         required: true
         content:
@@ -723,9 +720,9 @@ paths:
         "200":
           description: Updated
     delete:
-      tags: [Verbindungen]
+      tags: [Lehrbetrieb-Lernende]
       security: [{bearerAuth: []}]
-      summary: Löschen
+      summary: Verknüpfung löschen
       responses:
         "200":
           description: Deleted

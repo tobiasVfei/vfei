@@ -11,8 +11,7 @@ $rules = [
     'firma'   => 'required|string',
     'strasse' => 'required|string',
     'plz'     => 'required|string',
-    'ort'     => 'required|string',
-    'land_id' => 'required|int|positive'
+    'ort'     => 'required|string'
 ];
 
 $controller = new BaseController('tbl_lehrbetriebe', 'id_lehrbetrieb', $rules);
