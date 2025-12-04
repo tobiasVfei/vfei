@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../system/BaseController.php';
 
 $rules = [
     'kursnummer'   => 'required|string',

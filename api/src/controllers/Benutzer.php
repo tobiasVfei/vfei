@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../Database.php';
-require_once __DIR__ . '/../APICore.php';
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../system/APICore.php';
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -12,6 +12,7 @@ try {
 
     switch ($requestMethod) {
         case 'GET':
+            JwtHandler::verifyAuthHeader();
             if ($id !== false && $id > 0) {
                 $stmt = $pdo->prepare("SELECT id_benutzer, email, created_at FROM tbl_benutzer WHERE id_benutzer = ?");
                 $stmt->execute([$id]);
@@ -41,6 +42,7 @@ try {
             break;
 
         case 'PUT':
+            JwtHandler::verifyAuthHeader();
             if ($id === false || $id <= 0) {
                 throw new Exception("Ungültige ID für Update angegeben.", 400);
             }
@@ -50,6 +52,7 @@ try {
             break;
 
         case 'DELETE':
+            JwtHandler::verifyAuthHeader();
             if ($id === false || $id <= 0) {
                 throw new Exception("Ungültige ID für Löschen angegeben.", 400);
             }

@@ -1,31 +1,32 @@
 RewriteEngine On
 RewriteBase /api/src/
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-RewriteRule ^laender/([0-9]+)$ core/Laender.php?id=$1 [L,QSA]
-RewriteRule ^laender$ core/Laender.php [L,QSA]
+RewriteRule ^laender/([0-9]+)$ controllers/Laender.php?id=$1 [L,QSA]
+RewriteRule ^laender$ controllers/Laender.php [L,QSA]
 
-RewriteRule ^lehrbetriebe/([0-9]+)$ core/Lehrbetriebe.php?id=$1 [L,QSA]
-RewriteRule ^lehrbetriebe$ core/Lehrbetriebe.php [L,QSA]
+RewriteRule ^lehrbetriebe/([0-9]+)$ controllers/Lehrbetriebe.php?id=$1 [L,QSA]
+RewriteRule ^lehrbetriebe$ controllers/Lehrbetriebe.php [L,QSA]
 
-RewriteRule ^lernende/([0-9]+)$ core/Lernende.php?id=$1 [L,QSA]
-RewriteRule ^lernende$ core/Lernende.php [L,QSA]
+RewriteRule ^lernende/([0-9]+)$ controllers/Lernende.php?id=$1 [L,QSA]
+RewriteRule ^lernende$ controllers/Lernende.php [L,QSA]
 
-RewriteRule ^dozenten/([0-9]+)$ core/Dozenten.php?id=$1 [L,QSA]
-RewriteRule ^dozenten$ core/Dozenten.php [L,QSA]
+RewriteRule ^dozenten/([0-9]+)$ controllers/Dozenten.php?id=$1 [L,QSA]
+RewriteRule ^dozenten$ controllers/Dozenten.php [L,QSA]
 
-RewriteRule ^kurse/([0-9]+)$ core/Kurse.php?id=$1 [L,QSA]
-RewriteRule ^kurse$ core/Kurse.php [L,QSA]
+RewriteRule ^kurse/([0-9]+)$ controllers/Kurse.php?id=$1 [L,QSA]
+RewriteRule ^kurse$ controllers/Kurse.php [L,QSA]
 
-RewriteRule ^kurse_lernende/([0-9]+)$ core/Kurse_Lernende.php?id=$1 [L,QSA]
-RewriteRule ^kurse_lernende$ core/Kurse_Lernende.php [L,QSA]
+RewriteRule ^kurse_lernende/([0-9]+)$ controllers/Kurse_Lernende.php?id=$1 [L,QSA]
+RewriteRule ^kurse_lernende$ controllers/Kurse_Lernende.php [L,QSA]
 
-RewriteRule ^lehrbetrieb_lernende/([0-9]+)$ core/Lehrbetrieb_Lernende.php?id=$1 [L,QSA]
-RewriteRule ^lehrbetrieb_lernende$ core/Lehrbetrieb_Lernende.php [L,QSA]
+RewriteRule ^lehrbetrieb_lernende/([0-9]+)$ controllers/Lehrbetrieb_Lernende.php?id=$1 [L,QSA]
+RewriteRule ^lehrbetrieb_lernende$ controllers/Lehrbetrieb_Lernende.php [L,QSA]
 
-RewriteRule ^benutzer/([0-9]+)$ core/Benutzer.php?id=$1 [L,QSA]
-RewriteRule ^benutzer$ core/Benutzer.php [L,QSA]
+RewriteRule ^benutzer/([0-9]+)$ controllers/Benutzer.php?id=$1 [L,QSA]
+RewriteRule ^benutzer$ controllers/Benutzer.php [L,QSA]
 
-RewriteRule ^login$ core/Login.php [L,QSA]
+RewriteRule ^login$ controllers/Login.php [L,QSA]

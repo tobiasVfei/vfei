@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../Database.php';
-require_once __DIR__ . '/../APICore.php';
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/APICore.php';
 require_once __DIR__ . '/../validators/Validator.php';
 
 class BaseController
