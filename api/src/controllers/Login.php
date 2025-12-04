@@ -46,7 +46,7 @@ try {
         echo json_encode([
             'message' => 'Login erfolgreich.',
             'token' => $token,
-            'expires_in' => 3600
+            'expires_in' => 36000
         ]);
     } else {
         http_response_code(401);
