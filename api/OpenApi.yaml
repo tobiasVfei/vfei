@@ -4,13 +4,9 @@ info:
   description: RESTful Backend zur Verwaltung von Lernenden, Dozenten und Kursen.
   version: "1.0.0"
 servers:
-  # Passe diesen Pfad ggf. an deine Ordnerstruktur an (z.B. /api/src)
   - url: http://localhost/api/src
     description: Lokaler Entwicklungsserver
 
-# =========================================================================
-# SICHERHEIT & DATENMODELLE
-# =========================================================================
 components:
   securitySchemes:
     bearerAuth:
@@ -19,7 +15,6 @@ components:
       bearerFormat: JWT
 
   schemas:
-    # --- LOGIN & BENUTZER ---
     LoginRequest:
       type: object
       properties:
@@ -65,7 +60,6 @@ components:
       required:
         - email
 
-    # --- HAUPT-ENTITÄTEN ---
     Country:
       type: object
       properties:
@@ -182,7 +176,7 @@ components:
           type: string
           format: date
         dauer:
-          type: string # Korrigiert: Entspricht dem VARCHAR(50) Typ in der DB
+          type: string
       required:
         - kursnummer
         - kursthema
@@ -192,7 +186,6 @@ components:
         - enddatum
         - dauer
 
-    # --- VERKNÜPFUNGEN ---
     KursLernender:
       type: object
       properties:
@@ -204,7 +197,7 @@ components:
         nr_lernende:
           type: integer
         note:
-          type: string # Korrigiert: Entspricht der 'string' Validierungsregel im Controller
+          type: string
       required:
         - nr_kurs
         - nr_lernende
@@ -233,11 +226,7 @@ components:
         - start
         - ende
 
-# =========================================================================
-# ENDPUNKTE (PATHS)
-# =========================================================================
 paths:
-  # --- AUTH ---
   /login:
     post:
       tags: [Auth]
@@ -256,10 +245,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
 
-  # --- BENUTZER ---
   /benutzer:
     get:
       tags: [Benutzer]
+      security: [{bearerAuth: []}]
       summary: Alle Benutzer auflisten
       responses:
         "200":
@@ -292,6 +281,7 @@ paths:
           type: integer
     get:
       tags: [Benutzer]
+      security: [{bearerAuth: []}]
       summary: Einzelnen Benutzer abrufen
       responses:
         "200":
@@ -302,6 +292,7 @@ paths:
                 $ref: '#/components/schemas/Benutzer'
     put:
       tags: [Benutzer]
+      security: [{bearerAuth: []}]
       summary: Benutzer aktualisieren
       requestBody:
         required: true
@@ -314,12 +305,12 @@ paths:
           description: Updated
     delete:
       tags: [Benutzer]
+      security: [{bearerAuth: []}]
       summary: Benutzer löschen
       responses:
         "200":
           description: Deleted
 
-  # --- DOZENTEN ---
   /dozenten:
     get:
       tags: [Dozenten]
@@ -387,7 +378,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- KURSE ---
   /kurse:
     get:
       tags: [Kurse]
@@ -455,7 +445,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- KURSE-LERNENDE ---
   /kurse_lernende:
     post:
       tags: [Kurse-Lernende]
@@ -523,7 +512,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- LÄNDER ---
   /laender:
     get:
       tags: [Länder]
@@ -591,7 +579,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- LEHRBETRIEBE ---
   /lehrbetriebe:
     get:
       tags: [Lehrbetriebe]
@@ -659,7 +646,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- LEHRBETRIEB-LERNENDE ---
   /lehrbetrieb_lernende:
     post:
       tags: [Lehrbetrieb-Lernende]
@@ -727,7 +713,6 @@ paths:
         "200":
           description: Deleted
 
-  # --- LERNENDE ---
   /lernende:
     get:
       tags: [Lernende]
